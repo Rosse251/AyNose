@@ -1,0 +1,104 @@
+{
+  "name": "HÉROE AI - Asistente de Tienda de Cómics",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "heroe-ai",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook HÉROE AI",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.message }}",
+        "options": {
+          "systemMessage": "=Eres HÉROE AI, el asistente virtual y experto en cómics oficial de Tienda - Héroe en Ciudad del Este, Paraguay.\n\nInstrucciones:\n1. Responde con lenguaje natural, amigable, geek y apasionado, como un verdadero experto en cultura pop.\n2. NO fuerces ventas si el usuario solo está conversando o debatiendo.\n3. Si el usuario te pregunta por productos o recomendaciones de compra, puedes consultar el catálogo en stock proporcionado en la consulta.\n4. Si el usuario pregunta cosas generales, responde directamente sin rodeos.\n\nCatálogo disponible:\n{{ JSON.stringify($json.body.catalog) }}"
+        }
+      },
+      "id": "ai-agent",
+      "name": "AI Agent HÉROE",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "chat-model",
+      "name": "Google Gemini / OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        460,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"text\": {{ JSON.stringify($json.output) }},\n  \"products\": []\n}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Responder al Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook HÉROE AI": {
+      "main": [
+        [
+          {
+            "node": "AI Agent HÉROE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini / OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent HÉROE",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent HÉROE": {
+      "main": [
+        [
+          {
+            "node": "Responder al Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
